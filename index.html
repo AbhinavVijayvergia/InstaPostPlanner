@@ -224,12 +224,95 @@ select{-webkit-appearance:none;appearance:none}
 @media(max-width:767px){
   .app-layout{display:block;min-height:100vh}
   .sidebar{display:none!important}
-  .main-area{padding-bottom:66px}
-  .mob-screen{position:fixed;inset:0;z-index:100;background:var(--bg0);overflow-y:auto;padding-bottom:72px}
-  .mob-nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg1);border-top:1px solid var(--bd);display:flex;z-index:50;padding-bottom:env(safe-area-inset-bottom,0)}
-  .mob-nav button{flex:1;padding:10px 4px 8px;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--t3);font-size:10px;font-weight:600;transition:color .18s}.mob-nav button.on{color:var(--acc)}
+  .main-area{padding-bottom:0}
+  .mob-nav{display:none!important}
 }
+
+/* Mobile top header */
+.mob-header{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;
+  background:var(--bg1);
+  border-bottom:1px solid var(--bd);
+  position:sticky;top:0;z-index:40;
+}
+.hamburger-btn{
+  background:none;border:none;color:var(--t1);
+  padding:4px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;border-radius:6px;transition:background .15s;
+}
+.hamburger-btn:hover{background:var(--bg2)}
+
+/* Drawer overlay */
+.drawer-backdrop{
+  position:fixed;inset:0;z-index:150;
+  background:rgba(0,0,0,.55);
+  opacity:0;pointer-events:none;
+  transition:opacity .25s ease;
+}
+.drawer-backdrop.open{opacity:1;pointer-events:auto}
+
+/* Slide-out drawer */
+.drawer{
+  position:fixed;top:0;left:0;bottom:0;
+  width:280px;max-width:80vw;
+  background:var(--bg1);
+  border-right:1px solid var(--bd);
+  z-index:160;
+  transform:translateX(-100%);
+  transition:transform .28s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+.drawer.open{transform:translateX(0)}
+
+/* Drawer header */
+.drawer-head{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 16px;
+  border-bottom:1px solid var(--bd);
+  flex-shrink:0;
+}
+
+/* Drawer nav items */
+.drawer-nav{
+  display:flex;flex-direction:column;gap:2px;
+  padding:8px 8px;
+}
+.drawer-item{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 14px;
+  border-radius:10px;
+  background:none;border:none;
+  color:var(--t2);font-size:14px;font-weight:500;
+  cursor:pointer;transition:all .15s;
+  text-align:left;width:100%;
+}
+.drawer-item:hover{background:var(--bg2);color:var(--t1)}
+.drawer-item.on{background:var(--bg2);color:var(--t1);font-weight:600}
+.drawer-item svg{flex-shrink:0}
+
+/* Drawer content area */
+.drawer-content{
+  flex:1;overflow-y:auto;
+  border-top:1px solid var(--bd);
+}
+
+/* Drawer footer */
+.drawer-footer{
+  padding:12px 16px;
+  border-top:1px solid var(--bd);
+  display:flex;align-items:center;gap:10px;
+  flex-shrink:0;
+}
+
 hr{border:none;border-top:1px solid var(--bd);margin:14px 0}
+
+@media(min-width:768px){
+  .mob-header{display:none!important}
+  .drawer{display:none!important}
+  .drawer-backdrop{display:none!important}
+}
 </style>
 </head>
 <body>
@@ -827,16 +910,65 @@ function Controls({rows,setRows,showPos,setShowPos}){
   );
 }
 
-/* ─── Mobile Nav ─── */
-function MobNav({tab,setTab}){
+/* ─── Hamburger icon ─── */
+const HamburgerIcon=<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>;
+
+/* ─── Mobile Drawer Sidebar ─── */
+function MobileDrawer({open, onClose, drawerTab, setDrawerTab, sideProps, projects, saveProject, loadProject, deleteProject, dark, setDark}){
+  // close on Escape
+  useEffect(()=>{
+    if(!open) return;
+    const h=e=>{if(e.key==='Escape')onClose()};
+    window.addEventListener('keydown',h);return()=>window.removeEventListener('keydown',h);
+  },[open]);
+
+  // prevent body scroll when drawer is open
+  useEffect(()=>{
+    if(open) document.body.style.overflow='hidden';
+    else document.body.style.overflow='';
+    return()=>{document.body.style.overflow=''};
+  },[open]);
+
   return(
-    <div className="mob-nav">
-      {[{id:'upload',icon:Ico.upload,label:'Upload'},{id:'grid',icon:Ico.grid,label:'Preview'},{id:'projects',icon:Ico.save,label:'Projects'}].map(t=>(
-        <button key={t.id} className={tab===t.id?'on':''} onClick={()=>setTab(t.id)}>
-          {t.icon}{t.label}
-        </button>
-      ))}
-    </div>
+    <>
+      {/* Backdrop */}
+      <div className={`drawer-backdrop${open?' open':''}`} onClick={onClose}/>
+      {/* Drawer panel */}
+      <div className={`drawer${open?' open':''}`}>
+        {/* Drawer header */}
+        <div className="drawer-head">
+          <span className="gtext" style={{fontWeight:800,fontSize:18,letterSpacing:-.5}}>GridPlan</span>
+          <span style={{fontSize:11,color:'var(--t3)',background:'var(--bg2)',padding:'2px 8px',borderRadius:20,border:'1px solid var(--bd)'}}>beta</span>
+          <button className="btn-ico" style={{marginLeft:'auto',padding:5}} onClick={onClose}>{Ico.close}</button>
+        </div>
+
+        {/* Nav items */}
+        <div className="drawer-nav">
+          <button className={`drawer-item${drawerTab==='upload'?' on':''}`} onClick={()=>setDrawerTab('upload')}>
+            {Ico.upload} Upload Images
+          </button>
+          <button className={`drawer-item${drawerTab==='projects'?' on':''}`} onClick={()=>setDrawerTab('projects')}>
+            {Ico.save} Saved Projects
+          </button>
+        </div>
+
+        {/* Drawer content - contextual panel */}
+        <div className="drawer-content">
+          {drawerTab==='upload'
+            ?<UploadPanel {...sideProps}/>
+            :<ProjectsPanel projects={projects} saveProject={saveProject} loadProject={loadProject} deleteProject={deleteProject}/>
+          }
+        </div>
+
+        {/* Drawer footer */}
+        <div className="drawer-footer">
+          <button className="btn-ico" onClick={()=>setDark(d=>!d)} style={{padding:6}}>
+            {dark?Ico.sun:Ico.moon}
+          </button>
+          <span style={{fontSize:12,color:'var(--t3)'}}>{dark?'Light mode':'Dark mode'}</span>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -922,17 +1054,46 @@ function App(){
     return()=>style.remove();
   },[]);
 
+  const[drawerOpen,setDrawerOpen]=useState(false);
+  const[drawerTab,setDrawerTab]=useState('upload');
+
   if(!desk){
     return(
       <div>
-        {mobTab==='upload'&&<div className="mob-screen fade"><div style={{padding:'14px 16px',borderBottom:'1px solid var(--bd)',display:'flex',alignItems:'center',gap:10}}>
-<span className="gtext" style={{fontWeight:800,fontSize:18}}>GridPlan</span><button className="btn-ico" style={{marginLeft:'auto'}} onClick={()=>setDark(d=>!d)}>{dark?Ico.sun:Ico.moon}</button></div><UploadPanel {...sideProps}/></div>}
-        {mobTab==='projects'&&<div className="mob-screen fade"><div style={{padding:'14px 16px',borderBottom:'1px solid var(--bd)',display:'flex',alignItems:'center',gap:10}}><span className="gtext" style={{fontWeight:800,fontSize:18}}>GridPlan</span><button className="btn-ico" style={{marginLeft:'auto'}} onClick={()=>setDark(d=>!d)}>{dark?Ico.sun:Ico.moon}</button></div><ProjectsPanel {...{projects,saveProject,loadProject,deleteProject}}/></div>}
+        {/* Mobile top header bar */}
+        <div className="mob-header">
+          <button className="hamburger-btn" onClick={()=>setDrawerOpen(true)}>
+            {HamburgerIcon}
+          </button>
+          <span className="gtext" style={{fontWeight:800,fontSize:17,letterSpacing:-.5}}>GridPlan</span>
+          <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:6}}>
+            <button className="btn-ico" style={{padding:5}} onClick={()=>setDark(d=>!d)}>
+              {dark?Ico.sun:Ico.moon}
+            </button>
+          </div>
+        </div>
+
+        {/* Hamburger drawer */}
+        <MobileDrawer
+          open={drawerOpen}
+          onClose={()=>setDrawerOpen(false)}
+          drawerTab={drawerTab}
+          setDrawerTab={setDrawerTab}
+          sideProps={sideProps}
+          projects={projects}
+          saveProject={saveProject}
+          loadProject={loadProject}
+          deleteProject={deleteProject}
+          dark={dark}
+          setDark={setDark}
+        />
+
+        {/* Main grid - always visible */}
         <div className="main-area">
           <Controls rows={rows} setRows={setRows} showPos={showPos} setShowPos={setShowPos}/>
           <GridView {...gridProps}/>
         </div>
-        <MobNav tab={mobTab} setTab={setMobTab}/>
+
         {toast&&<div className="toast">{toast}</div>}
       </div>
     );
