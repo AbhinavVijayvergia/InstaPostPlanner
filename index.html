@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>GridPlan — Instagram Feed Planner</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root{
+  --bg0:#000;--bg1:#0f0f0f;--bg2:#1a1a1a;--bg3:#222;
+  --bd:#2e2e2e;--bd2:#3a3a3a;
+  --t1:#fff;--t2:#a8a8a8;--t3:#555;
+  --acc:#e1306c;--acc2:#c0215a;
+  --blue:#0095f6;--green:#00ba7c;
+  --gradient:linear-gradient(135deg,#f58529,#dd2a7b,#8134af,#515bd4)
+}
+.lm{
+  --bg0:#fafafa;--bg1:#fff;--bg2:#f0f0f0;--bg3:#e8e8e8;
+  --bd:#dbdbdb;--bd2:#c8c8c8;
+  --t1:#0a0a0a;--t2:#555;--t3:#aaa;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg0);color:var(--t1);min-height:100vh;overflow-x:hidden}
+#root{min-height:100vh}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
+button{cursor:pointer;font-family:inherit}
+input,textarea,select{font-family:inherit;background:var(--bg2);border:1px solid var(--bd);color:var(--t1);border-radius:8px;padding:9px 12px;font-size:14px;width:100%;outline:none;transition:border-color .2s}
+input:focus,textarea:focus,select:focus{border-color:var(--blue)}
+select{-webkit-appearance:none;appearance:none}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:8px;border:none;font-size:13px;font-weight:600;transition:all .18s;white-space:nowrap;line-height:1}
+.btn-p{background:var(--acc);color:#fff}.btn-p:hover{background:var(--acc2)}
+.btn-s{background:var(--bg2);color:var(--t1);border:1px solid var(--bd)}.btn-s:hover{background:var(--bg3)}
+.btn-ico{display:inline-flex;align-items:center;justify-content:center;padding:8px;border-radius:8px;background:var(--bg2);border:1px solid var(--bd);color:var(--t2);transition:all .18s}.btn-ico:hover{color:var(--t1);border-color:var(--bd2)}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:5px 11px;border-radius:20px;font-size:12px;font-weight:600;background:var(--bg2);color:var(--t2);border:1px solid var(--bd);cursor:pointer;transition:all .18s;white-space:nowrap}.chip.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.tab-bar{display:flex;background:var(--bg2);border-radius:10px;padding:3px;gap:0}
+.tab-btn{flex:1;padding:7px;border-radius:7px;border:none;background:transparent;color:var(--t2);font-size:13px;font-weight:500;cursor:pointer;transition:all .18s}.tab-btn.on{background:var(--bg1);color:var(--t1)}
+.upload-zone{border:2px dashed var(--bd2);border-radius:14px;padding:28px 16px;text-align:center;cursor:pointer;transition:all .2s}.upload-zone:hover,.upload-zone.over{border-color:var(--acc);background:rgba(225,48,108,.06)}
+.gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.gimg{aspect-ratio:1;overflow:hidden;border-radius:7px;cursor:pointer;position:relative;border:2px solid transparent;transition:all .18s}.gimg.in{border-color:var(--blue)}.gimg img{width:100%;height:100%;object-fit:cover;display:block}.gimg .del{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.75);color:#fff;border:none;font-size:11px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .18s}.gimg:hover .del,.gimg:focus .del{opacity:1}
+.lbl{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--t3);margin-bottom:6px}
+.proj-item{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;border:1px solid var(--bd);cursor:pointer;transition:all .18s}.proj-item:hover{border-color:var(--bd2);background:var(--bg2)}
+.proj-thumb{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;width:48px;height:48px;border-radius:5px;overflow:hidden;flex-shrink:0;background:var(--bg3)}
+.proj-thumb div{overflow:hidden;background:var(--bg3)}.proj-thumb img{width:100%;height:100%;object-fit:cover}
+.spin{width:18px;height:18px;border:2.5px solid var(--bd2);border-top-color:var(--acc);border-radius:50%;animation:sp .7s linear infinite}
+.toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--bd2);padding:10px 20px;border-radius:24px;font-size:13px;font-weight:500;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:su .25s ease;pointer-events:none;white-space:nowrap}
+.gtext{background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stats-row{display:flex;gap:20px}.stats-row .stat span{font-size:14px;font-weight:700;display:block;color:var(--t1)}.stats-row .stat p{font-size:12px;color:var(--t2)}
+
+/* IG Grid */
+.ig-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+.cell{aspect-ratio:1;overflow:hidden;position:relative;background:var(--bg2)}
+.cell img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.cell.dragging{opacity:.3}
+.cell.drag-over{outline:3px solid var(--acc);outline-offset:-3px;z-index:2}
+.cell-tap{position:absolute;inset:0;cursor:pointer;z-index:3}
+.cell-drag-handle{position:absolute;top:4px;left:4px;width:22px;height:22px;border-radius:5px;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;cursor:grab;z-index:4;opacity:0;transition:opacity .18s}
+.cell:hover .cell-drag-handle{opacity:1}
+.cell .tag-n{position:absolute;top:4px;right:4px;background:var(--acc);color:#fff;font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;z-index:5;letter-spacing:.5px}
+.empty-cell{aspect-ratio:1;background:var(--bg2);display:flex;align-items:center;justify-content:center;color:var(--t3)}
+
+/* ── Mobile Feed Viewer ── */
+/* Full-screen feed overlay — true IG mobile layout */
+.feed-backdrop{
+  position:fixed;inset:0;z-index:500;
+  background:var(--bg0);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+/* Top bar: back arrow + username + more */
+.feed-topbar{
+  display:flex;align-items:center;gap:0;
+  padding:8px 4px 8px 2px;
+  border-bottom:1px solid var(--bd);
+  flex-shrink:0;
+  background:var(--bg0);
+}
+/* Scrollable post body (between topbar and comment bar) */
+.feed-scroll{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+}
+/* Post card */
+.feed-post{
+  background:var(--bg0);
+}
+/* Post header row — compact like real IG */
+.feed-post-header{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 12px;
+}
+/* Image carousel container — compact 1:1 square, capped size */
+.feed-img-track-wrap{
+  position:relative;width:100%;max-width:468px;aspect-ratio:1;
+  overflow:hidden;background:#111;
+  margin:0 auto;
+}
+.feed-img-track{
+  display:flex;height:100%;
+  transition:transform .28s cubic-bezier(.4,0,.2,1);
+  will-change:transform;
+}
+.feed-img-slide{
+  flex:0 0 100%;height:100%;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+.feed-img-slide img{
+  width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;
+}
+/* Carousel arrow buttons */
+.feed-arrow{
+  position:absolute;top:50%;transform:translateY(-50%);
+  width:28px;height:28px;border-radius:50%;
+  background:rgba(255,255,255,.85);border:none;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;z-index:10;
+  box-shadow:0 1px 4px rgba(0,0,0,.25);
+  transition:opacity .15s,transform .15s;
+  opacity:.85;
+  color:#222;
+}
+.feed-arrow:hover{opacity:1;transform:translateY(-50%) scale(1.08)}
+.feed-arrow:active{transform:translateY(-50%) scale(.92)}
+.feed-arrow.left{left:8px}
+.feed-arrow.right{right:8px}
+/* Carousel dots — IG-style */
+.feed-dots-wrap{
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+  max-width:80px;
+}
+.feed-dots{
+  display:flex;gap:5px;align-items:center;
+  transition:transform .25s ease;
+}
+.feed-dot{
+  width:6px;height:6px;min-width:6px;min-height:6px;
+  border-radius:50%;background:var(--t3);
+  transition:all .2s;
+  flex-shrink:0;
+}
+.feed-dot.on{background:var(--blue)}
+.feed-dot.near{width:5px;height:5px;min-width:5px;min-height:5px;opacity:.6}
+.feed-dot.far{width:4px;height:4px;min-width:4px;min-height:4px;opacity:.35}
+/* Carousel counter pill (top-right) */
+.feed-counter{
+  position:absolute;top:10px;right:10px;
+  background:rgba(0,0,0,.6);color:#fff;
+  font-size:12px;font-weight:600;padding:4px 10px;border-radius:14px;
+  letter-spacing:.3px;
+  pointer-events:none;
+}
+/* Action row */
+.feed-actions{
+  display:flex;align-items:center;padding:6px 10px 2px;gap:0;
+}
+.feed-action-btn{
+  background:none;border:none;color:var(--t1);
+  padding:6px 8px;display:flex;align-items:center;
+  transition:transform .12s;
+}
+.feed-action-btn:active{transform:scale(.85)}
+/* Likes count */
+.feed-likes{padding:2px 14px 4px;font-size:13px;font-weight:700;color:var(--t1)}
+/* Caption */
+.feed-caption{padding:0 14px 4px;font-size:13px;line-height:1.45;color:var(--t1)}
+.feed-caption strong{font-weight:600;margin-right:4px}
+/* Comments preview */
+.feed-comments{padding:0 14px 3px;font-size:13px;color:var(--t2)}
+.feed-time{padding:2px 14px 10px;font-size:10px;color:var(--t3);letter-spacing:.3px;text-transform:uppercase}
+/* Comment input bar — sticky at bottom */
+.feed-comment-bar{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;
+  border-top:1px solid var(--bd);
+  background:var(--bg0);
+  flex-shrink:0;
+}
+/* Heart burst animation */
+@keyframes heartburst{
+  0%{transform:scale(0) translate(-50%,-50%);opacity:1}
+  60%{transform:scale(1.6) translate(-50%,-50%);opacity:1}
+  100%{transform:scale(1.2) translate(-50%,-50%);opacity:0}
+}
+.heart-burst{
+  position:absolute;top:50%;left:50%;
+  pointer-events:none;z-index:20;
+  animation:heartburst .6s ease forwards;
+}
+
+/* Profile header */
+.profile-header{padding:14px 16px;border-bottom:1px solid var(--bd)}
+.avatar-ring{width:68px;height:68px;border-radius:50%;background:var(--gradient);padding:2px;cursor:pointer;flex-shrink:0}
+.avatar-inner{width:100%;height:100%;border-radius:50%;overflow:hidden;background:var(--bg1);display:flex;align-items:center;justify-content:center;color:var(--t3)}
+
+/* Overlay / modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:var(--bg1);border:1px solid var(--bd);border-radius:16px;padding:24px;width:100%;max-width:400px;max-height:90vh;overflow-y:auto}
+
+/* Like animation */
+@keyframes heartpop{0%{transform:scale(0);opacity:1}50%{transform:scale(1.4);opacity:1}100%{transform:scale(1);opacity:1}}
+.heart-pop{animation:heartpop .35s ease forwards}
+
+@keyframes su{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes fi{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+@keyframes sp{to{transform:rotate(360deg)}}
+.fade{animation:fi .2s ease}
+
+/* Desktop */
+@media(min-width:768px){
+  .app-layout{display:flex;height:100vh;overflow:hidden}
+  .sidebar{width:320px;min-width:300px;height:100vh;overflow-y:auto;border-right:1px solid var(--bd);flex-shrink:0;background:var(--bg1)}
+  .main-area{flex:1;height:100vh;overflow-y:auto}
+  .mob-nav{display:none!important}
+  .mob-screen{display:none!important}
+}
+/* Mobile */
+@media(max-width:767px){
+  .app-layout{display:block;min-height:100vh}
+  .sidebar{display:none!important}
+  .main-area{padding-bottom:66px}
+  .mob-screen{position:fixed;inset:0;z-index:100;background:var(--bg0);overflow-y:auto;padding-bottom:72px}
+  .mob-nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg1);border-top:1px solid var(--bd);display:flex;z-index:50;padding-bottom:env(safe-area-inset-bottom,0)}
+  .mob-nav button{flex:1;padding:10px 4px 8px;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--t3);font-size:10px;font-weight:600;transition:color .18s}.mob-nav button.on{color:var(--acc)}
+}
+hr{border:none;border-top:1px solid var(--bd);margin:14px 0}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback,useMemo}=React;
+
+const uid=()=>Math.random().toString(36).slice(2,9);
+
+function useLs(key,def){
+  const[v,sv]=useState(()=>{try{const s=localStorage.getItem(key);return s?JSON.parse(s):def}catch{return def}});
+  const set=useCallback(u=>sv(p=>{const n=typeof u==='function'?u(p):u;try{localStorage.setItem(key,JSON.stringify(n))}catch{}return n}),[key]);
+  return[v,set];
+}
+
+/* ── Icons ── */
+const Ico={
+  upload:<svg width="20"height="20"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12"y1="3"x2="12"y2="15"/></svg>,
+  grid:<svg width="20"height="20"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><rect x="3"y="3"width="7"height="7"/><rect x="14"y="3"width="7"height="7"/><rect x="14"y="14"width="7"height="7"/><rect x="3"y="14"width="7"height="7"/></svg>,
+  save:<svg width="20"height="20"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>,
+  dl:<svg width="18"height="18"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12"y1="15"x2="12"y2="3"/></svg>,
+  sun:<svg width="18"height="18"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"><circle cx="12"cy="12"r="5"/><line x1="12"y1="1"x2="12"y2="3"/><line x1="12"y1="21"x2="12"y2="23"/><line x1="4.22"y1="4.22"x2="5.64"y2="5.64"/><line x1="18.36"y1="18.36"x2="19.78"y2="19.78"/><line x1="1"y1="12"x2="3"y2="12"/><line x1="21"y1="12"x2="23"y2="12"/><line x1="4.22"y1="19.78"x2="5.64"y2="18.36"/><line x1="18.36"y1="5.64"x2="19.78"y2="4.22"/></svg>,
+  moon:<svg width="18"height="18"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>,
+  trash:<svg width="15"height="15"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>,
+  edit:<svg width="15"height="15"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+  close:<svg width="18"height="18"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"><line x1="18"y1="6"x2="6"y2="18"/><line x1="6"y1="6"x2="18"y2="18"/></svg>,
+  img:<svg width="20"height="20"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><rect x="3"y="3"width="18"height="18"rx="2"/><circle cx="8.5"cy="8.5"r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>,
+  person:<svg width="24"height="24"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12"cy="7"r="4"/></svg>,
+  heart:<svg width="22"height="22"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>,
+  heartFill:<svg width="22"height="22"viewBox="0 0 24 24"fill="#ed4956"stroke="#ed4956"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>,
+  comment:<svg width="22"height="22"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+  share:<svg width="22"height="22"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><line x1="22"y1="2"x2="11"y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
+  bookmark:<svg width="22"height="22"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>,
+  chevL:<svg width="20"height="20"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2.5"strokeLinecap="round"strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>,
+  chevR:<svg width="20"height="20"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2.5"strokeLinecap="round"strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>,
+  more:<svg width="18"height="18"viewBox="0 0 24 24"fill="currentColor"><circle cx="5"cy="12"r="2"/><circle cx="12"cy="12"r="2"/><circle cx="19"cy="12"r="2"/></svg>,
+  undo:<svg width="15"height="15"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>,
+  redo:<svg width="15"height="15"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/></svg>,
+  eye:<svg width="13"height="13"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12"cy="12"r="3"/></svg>,
+  plus:<svg width="18"height="18"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"><line x1="12"y1="5"x2="12"y2="19"/><line x1="5"y1="12"x2="19"y2="12"/></svg>,
+  drag:<svg width="14"height="14"viewBox="0 0 24 24"fill="currentColor"><circle cx="9"cy="6"r="2"/><circle cx="15"cy="6"r="2"/><circle cx="9"cy="12"r="2"/><circle cx="15"cy="12"r="2"/><circle cx="9"cy="18"r="2"/><circle cx="15"cy="18"r="2"/></svg>,
+  check:<svg width="16"height="16"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="3"strokeLinecap="round"strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+};
+
+/* ─── Fake captions / likes for preview feel ─── */
+const fakeCaptions=["Golden hour never gets old ✨","Living for these moments 🌿","Good vibes only 🌅","Can't stop won't stop 📸","Making memories 💫","This view though 😍","Chasing the light ☀️","Simplicity is key 🤍","Lost in the moment 🌊","The world is beautiful 🌸"];
+const fakeLikes=()=>Math.floor(Math.random()*9800+200);
+const fakeTimeAgo=()=>["2 minutes ago","1 hour ago","3 hours ago","Yesterday","2 days ago","5 days ago","1 week ago"][Math.floor(Math.random()*7)];
+
+/* ─── Feed Viewer — single unified post with image carousel (IG mobile layout) ─── */
+function PostViewer({posts, startIdx, profile, onClose}){
+  const[imgIdx,setImgIdx]=useState(startIdx);
+  const[liked,setLiked]=useState(false);
+  const[bookmarked,setBookmarked]=useState(false);
+  const[burst,setBurst]=useState(false);
+  const[likes]=useState(fakeLikes);
+  const[caption]=useState(()=>fakeCaptions[0]);
+  const[timeAgo]=useState(fakeTimeAgo);
+  const lastTap=useRef(0);
+  const touchStartX=useRef(null);
+  const touchStartY=useRef(null);
+  const swiping=useRef(false);
+
+  // keyboard escape & arrow keys
+  useEffect(()=>{
+    const h=e=>{
+      if(e.key==='Escape')onClose();
+      if(e.key==='ArrowLeft')setImgIdx(p=>Math.max(p-1,0));
+      if(e.key==='ArrowRight')setImgIdx(p=>Math.min(p+1,posts.length-1));
+    };
+    window.addEventListener('keydown',h);return()=>window.removeEventListener('keydown',h);
+  },[posts.length]);
+
+  const handleImgTap=()=>{
+    const now=Date.now();
+    if(now-lastTap.current<320){
+      setLiked(true);
+      setBurst(true);
+      setTimeout(()=>setBurst(false),700);
+    }
+    lastTap.current=now;
+  };
+
+  // horizontal swipe within image carousel
+  const onTouchStart=e=>{
+    touchStartX.current=e.touches[0].clientX;
+    touchStartY.current=e.touches[0].clientY;
+    swiping.current=false;
+  };
+  const onTouchMove=e=>{
+    if(touchStartX.current===null)return;
+    const dx=Math.abs(e.touches[0].clientX-touchStartX.current);
+    const dy=Math.abs(e.touches[0].clientY-touchStartY.current);
+    if(dx>dy&&dx>10){
+      swiping.current=true;
+      e.preventDefault();
+    }
+  };
+  const onTouchEnd=e=>{
+    if(touchStartX.current===null)return;
+    const dx=e.changedTouches[0].clientX-touchStartX.current;
+    if(Math.abs(dx)>40){
+      setImgIdx(p=>dx<0?Math.min(p+1,posts.length-1):Math.max(p-1,0));
+    }
+    touchStartX.current=null;
+    touchStartY.current=null;
+    swiping.current=false;
+  };
+
+  const fakeComments=[
+    {u:'alex.photo',t:'Absolutely stunning! 😍'},
+    {u:'travel_diary',t:'Where was this taken? 🌍'},
+    {u:'sarah_creates',t:'Love the vibes ✨'},
+    {u:'lens.life',t:'Goals 🔥'},
+  ];
+
+  /* IG-style scrolling dot indicators: show a window of ~5 dots,
+     scale down dots that are further from the active one */
+  const renderDots=()=>{
+    const n=posts.length;
+    if(n<=1) return null;
+    const maxVisible=7;
+    // For small counts, just show all dots
+    if(n<=maxVisible){
+      return(
+        <div className="feed-dots-wrap" style={{maxWidth:n*10+6}}>
+          <div className="feed-dots">
+            {posts.map((_,i)=>{
+              let cls='feed-dot';
+              if(i===imgIdx) cls+=' on';
+              return <div key={i} className={cls}/>;
+            })}
+          </div>
+        </div>
+      );
+    }
+    // For many dots, show a sliding window with scaling
+    const windowSize=5;
+    // Calculate the offset so the active dot stays centered
+    let start=imgIdx-Math.floor(windowSize/2);
+    if(start<0) start=0;
+    if(start>n-windowSize) start=n-windowSize;
+    const visibleDots=[];
+    for(let i=start;i<start+windowSize;i++){
+      const dist=Math.abs(i-imgIdx);
+      let cls='feed-dot';
+      if(i===imgIdx) cls+=' on';
+      else if(dist===1) cls+=' near';
+      else if(dist>=2) cls+=' far';
+      visibleDots.push(<div key={i} className={cls}/>);
+    }
+    return(
+      <div className="feed-dots-wrap">
+        <div className="feed-dots">{visibleDots}</div>
+      </div>
+    );
+  };
+
+  return(
+    <div className="feed-backdrop fade">
+      {/* Top bar */}
+      <div className="feed-topbar">
+        <button onClick={onClose} style={{background:'none',border:'none',color:'var(--t1)',padding:'6px 10px',display:'flex',alignItems:'center'}}>
+          {Ico.chevL}
+        </button>
+        <span style={{fontWeight:600,fontSize:15,flex:1}}>Posts</span>
+        <button style={{background:'none',border:'none',color:'var(--t2)',padding:'6px 12px',display:'flex',alignItems:'center'}}>
+          {Ico.more}
+        </button>
+      </div>
+
+      {/* Scrollable single post content */}
+      <div className="feed-scroll">
+        <div className="feed-post">
+          {/* ONE post header */}
+          <div className="feed-post-header">
+            <div style={{width:32,height:32,borderRadius:'50%',background:'var(--gradient)',padding:2,flexShrink:0}}>
+              <div style={{width:'100%',height:'100%',borderRadius:'50%',overflow:'hidden',background:'var(--bg2)',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--t3)'}}>
+                {profile.avatar
+                  ?<img src={profile.avatar} style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                  :<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>}
+              </div>
+            </div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontWeight:600,fontSize:13,lineHeight:1.2}}>{profile.username}
+                <span style={{color:'var(--blue)',fontSize:12,fontWeight:400,marginLeft:5}}>• Follow</span>
+              </div>
+            </div>
+            <button style={{background:'none',border:'none',color:'var(--t2)',padding:'4px 0 4px 8px'}}>{Ico.more}</button>
+          </div>
+
+          {/* Image carousel — compact 1:1 square with arrows */}
+          <div className="feed-img-track-wrap"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+            onClick={handleImgTap}>
+            <div className="feed-img-track" style={{transform:`translateX(${-imgIdx*100}%)`}}>
+              {posts.map((img,i)=>(
+                <div key={img.id||i} className="feed-img-slide">
+                  <img src={img.url} alt={`Slide ${i+1}`}/>
+                </div>
+              ))}
+            </div>
+            {/* Left arrow */}
+            {posts.length>1&&imgIdx>0&&(
+              <button className="feed-arrow left" onClick={e=>{e.stopPropagation();setImgIdx(p=>Math.max(p-1,0))}}>
+                <svg width="16"height="16"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="3"strokeLinecap="round"strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+            )}
+            {/* Right arrow */}
+            {posts.length>1&&imgIdx<posts.length-1&&(
+              <button className="feed-arrow right" onClick={e=>{e.stopPropagation();setImgIdx(p=>Math.min(p+1,posts.length-1))}}>
+                <svg width="16"height="16"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="3"strokeLinecap="round"strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            )}
+            {/* Counter pill top-right */}
+            {posts.length>1&&<div className="feed-counter">{imgIdx+1}/{posts.length}</div>}
+            {/* Double-tap heart burst */}
+            {burst&&(
+              <div className="heart-burst">
+                <svg width="80"height="80"viewBox="0 0 24 24"fill="#ed4956"stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </div>
+            )}
+          </div>
+
+          {/* Dot indicators below image (IG style) */}
+          {posts.length>1&&(
+            <div style={{display:'flex',justifyContent:'center',padding:'8px 0 2px'}}>
+              {renderDots()}
+            </div>
+          )}
+
+          {/* ONE set of action buttons */}
+          <div className="feed-actions">
+            <button className="feed-action-btn" onClick={()=>setLiked(l=>!l)}
+              style={{transform:liked?'scale(1.12)':'scale(1)',transition:'transform .15s'}}>
+              {liked
+                ?<svg width="24"height="24"viewBox="0 0 24 24"fill="#ed4956"stroke="#ed4956"strokeWidth="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                :<svg width="24"height="24"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="1.8"strokeLinecap="round"strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              }
+            </button>
+            <button className="feed-action-btn">
+              <svg width="24"height="24"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="1.8"strokeLinecap="round"strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </button>
+            <button className="feed-action-btn">
+              <svg width="24"height="24"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="1.8"strokeLinecap="round"strokeLinejoin="round"><line x1="22"y1="2"x2="11"y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+            <button className="feed-action-btn" onClick={()=>setBookmarked(b=>!b)} style={{marginLeft:'auto'}}>
+              <svg width="24"height="24"viewBox="0 0 24 24"fill={bookmarked?"currentColor":"none"}stroke="currentColor"strokeWidth="1.8"strokeLinecap="round"strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            </button>
+          </div>
+
+          {/* ONE likes count */}
+          <div className="feed-likes">{(likes+(liked?1:0)).toLocaleString()} likes</div>
+
+          {/* ONE caption */}
+          <div className="feed-caption">
+            <strong>{profile.username}</strong>{caption}
+          </div>
+
+          {/* View all comments link */}
+          <div style={{padding:'0 14px 4px'}}>
+            <span style={{fontSize:13,color:'var(--t3)',cursor:'pointer'}}>View all {fakeComments.length} comments</span>
+          </div>
+
+          {/* ONE comments section */}
+          {fakeComments.slice(0,2).map((c,i)=>(
+            <div key={i} className="feed-comments">
+              <strong style={{color:'var(--t1)',fontWeight:600,fontSize:13}}>{c.u} </strong>
+              <span style={{fontSize:13}}>{c.t}</span>
+            </div>
+          ))}
+
+          {/* Timestamp */}
+          <div className="feed-time">{timeAgo}</div>
+        </div>
+      </div>
+
+      {/* Comment input bar — fixed at bottom, outside scroll */}
+      <div className="feed-comment-bar">
+        <div style={{width:28,height:28,borderRadius:'50%',background:'var(--bg3)',flexShrink:0,overflow:'hidden',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--t3)'}}>
+          {profile.avatar
+            ?<img src={profile.avatar} style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+            :<svg width="16"height="16"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12"cy="7"r="4"/></svg>}
+        </div>
+        <span style={{flex:1,fontSize:13,color:'var(--t3)'}}>Add a comment…</span>
+        <span style={{fontSize:18}}>😊</span>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Profile Header ─── */
+function ProfileHeader({profile,setProfile,postCount}){
+  const[ed,setEd]=useState(false);
+  const[d,setD]=useState(profile);
+  const fref=useRef();
+  const save=()=>{setProfile(d);setEd(false)};
+  return(
+    <div className="profile-header">
+      <div style={{display:'flex',alignItems:'center',gap:20,marginBottom:12}}>
+        <div className="avatar-ring" onClick={()=>fref.current.click()}>
+          <div className="avatar-inner">
+            {profile.avatar?<img src={profile.avatar} style={{width:'100%',height:'100%',objectFit:'cover'}}/>:Ico.person}
+          </div>
+        </div>
+        <input ref={fref} type="file" accept="image/*" style={{display:'none'}} onChange={e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>setProfile(p=>({...p,avatar:ev.target.result}));r.readAsDataURL(f)}}/>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+            <span style={{fontWeight:600,fontSize:15,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{profile.username}</span>
+            <button className="btn-ico" style={{padding:4}} onClick={()=>{setD(profile);setEd(true)}}>{Ico.edit}</button>
+          </div>
+          <div className="stats-row">
+            <div className="stat"><span>{postCount}</span><p>posts</p></div>
+            <div className="stat"><span>{profile.followers}</span><p>followers</p></div>
+            <div className="stat"><span>{profile.following}</span><p>following</p></div>
+          </div>
+        </div>
+      </div>
+      <div style={{fontSize:13,lineHeight:1.5}}>
+        <div style={{fontWeight:600}}>{profile.displayName}</div>
+        <div style={{color:'var(--t2)',whiteSpace:'pre-wrap'}}>{profile.bio}</div>
+      </div>
+      {/* Stories row */}
+      <div style={{display:'flex',gap:14,marginTop:14,overflowX:'auto',paddingBottom:4}}>
+        {['Travel','Food','Style','Reels','Life'].map(s=>(
+          <div key={s} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:5,flexShrink:0}}>
+            <div style={{width:54,height:54,borderRadius:'50%',background:'var(--gradient)',padding:2}}>
+              <div style={{width:'100%',height:'100%',borderRadius:'50%',background:'var(--bg2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20}}>
+                {['✈️','🍜','👗','🎬','🌿'][['Travel','Food','Style','Reels','Life'].indexOf(s)]}
+              </div>
+            </div>
+            <span style={{fontSize:10,color:'var(--t2)',maxWidth:56,textAlign:'center',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s}</span>
+          </div>
+        ))}
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:5,flexShrink:0}}>
+          <div style={{width:54,height:54,borderRadius:'50%',border:'1.5px dashed var(--bd2)',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--t3)',fontSize:22}}>+</div>
+          <span style={{fontSize:10,color:'var(--t3)'}}>New</span>
+        </div>
+      </div>
+      {/* Tabs */}
+      <div style={{display:'flex',marginTop:14,borderTop:'1px solid var(--bd)'}}>
+        {[['⊞','Grid'],['▶','Reels'],['🏷','Tagged']].map(([ic,lb],i)=>(
+          <div key={lb} style={{flex:1,padding:'10px 0',display:'flex',alignItems:'center',justifyContent:'center',gap:5,fontSize:12,color:i===0?'var(--t1)':'var(--t3)',fontWeight:i===0?700:400,borderBottom:i===0?'1.5px solid var(--t1)':'none',cursor:'pointer'}}>
+            <span>{ic}</span>{lb}
+          </div>
+        ))}
+      </div>
+      {ed&&(
+        <div className="overlay" onClick={()=>setEd(false)}>
+          <div className="modal fade" onClick={e=>e.stopPropagation()}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+              <h3 style={{fontSize:16}}>Edit Profile</h3>
+              <button className="btn-ico" onClick={()=>setEd(false)}>{Ico.close}</button>
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:10}}>
+              {[['Username','username'],['Display Name','displayName'],['Followers','followers'],['Following','following']].map(([l,k])=>(
+                <div key={k}><label style={{fontSize:12,color:'var(--t2)',marginBottom:3,display:'block'}}>{l}</label><input value={d[k]} onChange={e=>setD(p=>({...p,[k]:e.target.value}))}/></div>
+              ))}
+              <div><label style={{fontSize:12,color:'var(--t2)',marginBottom:3,display:'block'}}>Bio</label><textarea rows={3} value={d.bio} onChange={e=>setD(p=>({...p,bio:e.target.value}))} style={{resize:'none'}}/></div>
+            </div>
+            <div style={{display:'flex',gap:8,marginTop:16}}>
+              <button className="btn btn-p" style={{flex:1}} onClick={save}>Save</button>
+              <button className="btn btn-s" onClick={()=>setEd(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Upload Panel ─── */
+function UploadPanel({images,setImages,gridImages,setGridImages,addPos,setAddPos}){
+  const fref=useRef();
+  const[over,setOver]=useState(false);
+  const load=useCallback(files=>{
+    Array.from(files).filter(f=>f.type.startsWith('image/')).forEach(file=>{
+      const r=new FileReader();
+      r.onload=ev=>setImages(prev=>[...prev,{id:uid(),url:ev.target.result,name:file.name,isNew:true}]);
+      r.readAsDataURL(file);
+    });
+  },[setImages]);
+  const addToGrid=img=>{
+    if(gridImages.find(g=>g.id===img.id))return;
+    setGridImages(prev=>addPos==='start'?[img,...prev]:[...prev,img]);
+  };
+  const addAll=()=>{
+    const news=images.filter(img=>!gridImages.find(g=>g.id===img.id));
+    if(!news.length)return;
+    setGridImages(prev=>addPos==='start'?[...news,...prev]:[...prev,...news]);
+  };
+  const remove=id=>{setImages(p=>p.filter(i=>i.id!==id));setGridImages(p=>p.filter(i=>i.id!==id))};
+  return(
+    <div style={{padding:'12px 16px'}}>
+      <div className={`upload-zone${over?' over':''}`}
+        onDragOver={e=>{e.preventDefault();setOver(true)}}
+        onDragLeave={()=>setOver(false)}
+        onDrop={e=>{e.preventDefault();setOver(false);load(e.dataTransfer.files)}}
+        onClick={()=>fref.current.click()}>
+        <div style={{color:'var(--t3)',marginBottom:8,display:'flex',justifyContent:'center'}}>{Ico.upload}</div>
+        <div style={{fontSize:14,fontWeight:600,marginBottom:3}}>Drop images here</div>
+        <div style={{fontSize:12,color:'var(--t3)'}}>or tap to browse</div>
+        <input ref={fref} type="file" accept="image/*" multiple style={{display:'none'}} onChange={e=>load(e.target.files)}/>
+      </div>
+      {images.length>0&&(
+        <div style={{marginTop:12}}>
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+            <span className="lbl">Gallery ({images.length})</span>
+            <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:6}}>
+              <select value={addPos} onChange={e=>setAddPos(e.target.value)} style={{width:'auto',fontSize:11,padding:'4px 8px'}}>
+                <option value="start">→ Front</option><option value="end">→ End</option>
+              </select>
+              <button className="btn btn-p" style={{padding:'4px 10px',fontSize:12}} onClick={addAll}>+All</button>
+            </div>
+          </div>
+          <div className="gallery-grid">
+            {images.map(img=>(
+              <div key={img.id} className={`gimg${gridImages.find(g=>g.id===img.id)?' in':''}`} onClick={()=>addToGrid(img)}>
+                <img src={img.url} alt=""/>
+                {gridImages.find(g=>g.id===img.id)&&(
+                  <div style={{position:'absolute',inset:0,background:'rgba(0,149,246,.25)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                    <span style={{color:'#fff'}}>{Ico.check}</span>
+                  </div>
+                )}
+                <button className="del" onClick={e=>{e.stopPropagation();remove(img.id)}}>✕</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Projects Panel ─── */
+function ProjectsPanel({projects,saveProject,loadProject,deleteProject}){
+  const[nm,setNm]=useState('');
+  const[show,setShow]=useState(false);
+  const go=()=>{if(nm.trim()){saveProject(nm.trim());setNm('');setShow(false)}};
+  return(
+    <div style={{padding:'12px 16px'}}>
+      <button className="btn btn-p" style={{width:'100%',justifyContent:'center',marginBottom:14}} onClick={()=>setShow(true)}>
+        {Ico.save} Save Current Layout
+      </button>
+      {projects.length===0&&<div style={{textAlign:'center',padding:'32px 12px',color:'var(--t3)',fontSize:13,lineHeight:1.7}}>No saved projects.<br/>Save your layout to start.</div>}
+      <div style={{display:'flex',flexDirection:'column',gap:8}}>
+        {projects.map(p=>(
+          <div key={p.id} className="proj-item" onClick={()=>loadProject(p)}>
+            <div className="proj-thumb">
+              {(p.gridImages||[]).slice(0,9).map((img,i)=><div key={i}><img src={img.url} alt=""/></div>)}
+              {Array.from({length:Math.max(0,9-(p.gridImages||[]).length)}).map((_,i)=><div key={`e${i}`}/>)}
+            </div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontWeight:600,fontSize:13,marginBottom:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name}</div>
+              <div style={{fontSize:11,color:'var(--t3)'}}>{(p.gridImages||[]).length} posts · {new Date(p.date).toLocaleDateString()}</div>
+            </div>
+            <button className="btn-ico" style={{padding:6,flexShrink:0}} onClick={e=>{e.stopPropagation();deleteProject(p.id)}}>{Ico.trash}</button>
+          </div>
+        ))}
+      </div>
+      {show&&(
+        <div className="overlay" onClick={()=>setShow(false)}>
+          <div className="modal fade" onClick={e=>e.stopPropagation()}>
+            <h3 style={{fontSize:16,marginBottom:12}}>Save Project</h3>
+            <input placeholder="Project name…" value={nm} onChange={e=>setNm(e.target.value)} autoFocus onKeyDown={e=>e.key==='Enter'&&go()}/>
+            <div style={{display:'flex',gap:8,marginTop:12}}>
+              <button className="btn btn-p" style={{flex:1}} onClick={go}>Save</button>
+              <button className="btn btn-s" onClick={()=>setShow(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Grid View ─── */
+const MAX_UNDO=25;
+function GridView({gridImages,setGridImages,gridRows,profile,setProfile,showPos,dark,onExport,undo,redo,canUndo,canRedo}){
+  const[di,setDi]=useState(null);
+  const[oi,setOi]=useState(null);
+  const[viewer,setViewer]=useState(null); // index
+  const[exporting,setExporting]=useState(false);
+  const total=gridRows*3;
+  const cells=[...gridImages];
+  while(cells.length<total)cells.push(null);
+
+  const onDragStart=i=>setDi(i);
+  const onDragEnter=i=>setOi(i);
+  const onDrop=i=>{
+    if(di===null||di===i){setDi(null);setOi(null);return}
+    const arr=[...gridImages];const[m]=arr.splice(di,1);arr.splice(i,0,m);
+    setGridImages(arr);setDi(null);setOi(null);
+  };
+  const onDragEnd=()=>{setDi(null);setOi(null)};
+  const remove=id=>setGridImages(p=>p.filter(i=>i.id!==id));
+
+  const doExport=async()=>{
+    setExporting(true);await onExport();setExporting(false);
+  };
+
+  return(
+    <div>
+      <ProfileHeader profile={profile} setProfile={setProfile} postCount={gridImages.length}/>
+      {/* Toolbar */}
+      <div style={{padding:'7px 12px',borderBottom:'1px solid var(--bd)',display:'flex',alignItems:'center',gap:8,background:'var(--bg1)'}}>
+        <button className="btn-ico" style={{opacity:canUndo?1:.35}} disabled={!canUndo} onClick={undo}>{Ico.undo}</button>
+        <button className="btn-ico" style={{opacity:canRedo?1:.35}} disabled={!canRedo} onClick={redo}>{Ico.redo}</button>
+        <span style={{fontSize:11,color:'var(--t3)',marginLeft:4}}>Drag cells to reorder</span>
+        <button className="btn btn-p" style={{marginLeft:'auto',padding:'7px 12px',fontSize:12}} onClick={doExport} disabled={exporting}>
+          {exporting?<span className="spin"/>:Ico.dl} Export
+        </button>
+      </div>
+      {/* Grid */}
+      <div id="ig-grid-wrap">
+        <div className="ig-grid">
+          {cells.map((img,i)=>img?(
+            <div
+              key={img.id+i}
+              className={`cell${di===i?' dragging':''}${oi===i&&di!==i?' drag-over':''}`}
+              draggable
+              onDragStart={()=>onDragStart(i)}
+              onDragEnter={()=>onDragEnter(i)}
+              onDragOver={e=>e.preventDefault()}
+              onDrop={()=>onDrop(i)}
+              onDragEnd={onDragEnd}
+            >
+              <img src={img.url} alt=""/>
+              {img.isNew&&<div className="tag-n">NEW</div>}
+              {/* Drag handle */}
+              <div className="cell-drag-handle" style={{cursor:'grab'}}>{Ico.drag}</div>
+              {/* Tap to view */}
+              <div className="cell-tap" onClick={()=>setViewer(i)}/>
+              {/* Remove on long-press area (overlay button) */}
+              <button onClick={e=>{e.stopPropagation();remove(img.id)}} style={{position:'absolute',bottom:4,right:4,width:22,height:22,borderRadius:50,background:'rgba(0,0,0,.65)',border:'none',color:'#fff',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',opacity:0,transition:'opacity .18s',zIndex:6}} className="cell-del-btn">✕</button>
+            </div>
+          ):(
+            <div key={`e${i}`} className="empty-cell">{Ico.img}</div>
+          ))}
+        </div>
+      </div>
+      {viewer!==null&&(
+        <PostViewer
+          posts={gridImages}
+          startIdx={Math.min(viewer,gridImages.length-1)}
+          profile={profile}
+          onClose={()=>setViewer(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ─── Sidebar ─── */
+function Sidebar({tab,setTab,images,setImages,gridImages,setGridImages,addPos,setAddPos,projects,saveProject,loadProject,deleteProject,dark,setDark}){
+  return(
+    <div style={{background:'var(--bg1)',height:'100%',display:'flex',flexDirection:'column'}}>
+      <div style={{padding:'14px 16px',borderBottom:'1px solid var(--bd)',display:'flex',alignItems:'center',gap:10,flexShrink:0}}>
+        <span style={{background:'var(--gradient)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text',fontWeight:800,fontSize:18,letterSpacing:-.5}}>GridPlan</span>
+        <span style={{fontSize:11,color:'var(--t3)',background:'var(--bg2)',padding:'2px 8px',borderRadius:20,border:'1px solid var(--bd)'}}>beta</span>
+        <button className="btn-ico" style={{marginLeft:'auto'}} onClick={()=>setDark(d=>!d)}>{dark?Ico.sun:Ico.moon}</button>
+      </div>
+      <div style={{padding:'10px 16px',borderBottom:'1px solid var(--bd)',flexShrink:0}}>
+        <div className="tab-bar">
+          <button className={`tab-btn${tab==='upload'?' on':''}`} onClick={()=>setTab('upload')}>Upload</button>
+          <button className={`tab-btn${tab==='projects'?' on':''}`} onClick={()=>setTab('projects')}>Projects</button>
+        </div>
+      </div>
+      <div style={{overflowY:'auto',flex:1}}>
+        {tab==='upload'
+          ?<UploadPanel images={images} setImages={setImages} gridImages={gridImages} setGridImages={setGridImages} addPos={addPos} setAddPos={setAddPos}/>
+          :<ProjectsPanel projects={projects} saveProject={saveProject} loadProject={loadProject} deleteProject={deleteProject}/>
+        }
+      </div>
+    </div>
+  );
+}
+
+/* ─── Controls bar ─── */
+function Controls({rows,setRows,showPos,setShowPos}){
+  return(
+    <div style={{padding:'9px 14px',borderBottom:'1px solid var(--bd)',display:'flex',alignItems:'center',gap:8,overflowX:'auto',background:'var(--bg1)',flexShrink:0}}>
+      <span className="lbl" style={{margin:0,whiteSpace:'nowrap',fontSize:10}}>Rows</span>
+      <div style={{display:'flex',gap:4}}>
+        {[[3,'3'],[6,'6'],[9,'9'],[12,'All']].map(([r,l])=>(
+          <button key={r} className={`chip${rows===r?' on':''}`} onClick={()=>setRows(r)}>{l}</button>
+        ))}
+      </div>
+      <button className={`chip${showPos?' on':''}`} style={{marginLeft:'auto'}} onClick={()=>setShowPos(s=>!s)}>
+        {Ico.eye} #
+      </button>
+    </div>
+  );
+}
+
+/* ─── Mobile Nav ─── */
+function MobNav({tab,setTab}){
+  return(
+    <div className="mob-nav">
+      {[{id:'upload',icon:Ico.upload,label:'Upload'},{id:'grid',icon:Ico.grid,label:'Preview'},{id:'projects',icon:Ico.save,label:'Projects'}].map(t=>(
+        <button key={t.id} className={tab===t.id?'on':''} onClick={()=>setTab(t.id)}>
+          {t.icon}{t.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ─── App ─── */
+function App(){
+  const[dark,setDarkRaw]=useLs('igp-dark',true);
+  const[images,setImages]=useState([]);
+  const[gridImgs,setGridImgsRaw]=useState([]);
+  const[rows,setRows]=useState(3);
+  const[showPos,setShowPos]=useState(false);
+  const[sideTab,setSideTab]=useState('upload');
+  const[mobTab,setMobTab]=useState('grid');
+  const[addPos,setAddPos]=useState('start');
+  const[projects,setProjects]=useLs('igp-projects',[]);
+  const[profile,setProfile]=useLs('igp-profile',{username:'yourusername',displayName:'Your Name',bio:'📸 Photographer & Creator\n✨ Sharing moments',followers:'1.2K',following:'842',avatar:''});
+  const[toast,setToast]=useState('');
+  const undoRef=useRef([]);
+  const redoRef=useRef([]);
+  const[,forceRender]=useState(0);
+
+  const setDark=useCallback(v=>setDarkRaw(v),[setDarkRaw]);
+  useEffect(()=>{document.body.className=dark?'':'lm'},[dark]);
+
+  const showToast=msg=>{setToast(msg);setTimeout(()=>setToast(''),2600)};
+
+  const setGridImages=useCallback(updater=>{
+    setGridImgsRaw(prev=>{
+      const next=typeof updater==='function'?updater(prev):updater;
+      undoRef.current=[...undoRef.current.slice(-MAX_UNDO),prev];
+      redoRef.current=[];
+      forceRender(n=>n+1);
+      return next;
+    });
+  },[]);
+
+  const undo=()=>{
+    if(!undoRef.current.length)return;
+    const prev=undoRef.current.pop();
+    redoRef.current.push(gridImgs);
+    setGridImgsRaw(prev);
+    forceRender(n=>n+1);
+  };
+  const redo=()=>{
+    if(!redoRef.current.length)return;
+    const next=redoRef.current.pop();
+    undoRef.current.push(gridImgs);
+    setGridImgsRaw(next);
+    forceRender(n=>n+1);
+  };
+
+  const saveProject=name=>{
+    setProjects(p=>[{id:uid(),name,date:Date.now(),gridImages:gridImgs,images},...p]);
+    showToast(`"${name}" saved ✓`);
+  };
+  const loadProject=p=>{
+    setImages(p.images||[]);setGridImgsRaw(p.gridImages||[]);
+    showToast(`Loaded "${p.name}"`);setMobTab('grid');
+  };
+  const deleteProject=id=>{setProjects(p=>p.filter(x=>x.id!==id));showToast('Deleted')};
+
+  const doExport=async()=>{
+    const el=document.getElementById('ig-grid-wrap');
+    if(!el)return;
+    showToast('Exporting…');
+    try{
+      const canvas=await html2canvas(el,{useCORS:true,scale:2,backgroundColor:dark?'#000':'#fafafa',logging:false});
+      const a=document.createElement('a');a.download='instagram-grid.png';a.href=canvas.toDataURL('image/png');a.click();
+      showToast('Downloaded 🎉');
+    }catch{showToast('Export failed')}
+  };
+
+  const[desk,setDesk]=useState(()=>window.innerWidth>=768);
+  useEffect(()=>{const h=()=>setDesk(window.innerWidth>=768);window.addEventListener('resize',h);return()=>window.removeEventListener('resize',h)},[]);
+
+  const sideProps={images,setImages,gridImages:gridImgs,setGridImages,addPos,setAddPos,projects,saveProject,loadProject,deleteProject,dark,setDark};
+  const gridProps={gridImages:gridImgs,setGridImages,gridRows:rows,profile,setProfile,showPos,dark,onExport:doExport,undo,redo,canUndo:undoRef.current.length>0,canRedo:redoRef.current.length>0};
+
+  // add hover effect for remove btn inside cells
+  useEffect(()=>{
+    const style=document.createElement('style');
+    style.textContent='.cell:hover .cell-del-btn{opacity:1!important}';
+    document.head.appendChild(style);
+    return()=>style.remove();
+  },[]);
+
+  if(!desk){
+    return(
+      <div>
+        {mobTab==='upload'&&<div className="mob-screen fade"><div style={{padding:'14px 16px',borderBottom:'1px solid var(--bd)',display:'flex',alignItems:'center',gap:10}}>
+<span className="gtext" style={{fontWeight:800,fontSize:18}}>GridPlan</span><button className="btn-ico" style={{marginLeft:'auto'}} onClick={()=>setDark(d=>!d)}>{dark?Ico.sun:Ico.moon}</button></div><UploadPanel {...sideProps}/></div>}
+        {mobTab==='projects'&&<div className="mob-screen fade"><div style={{padding:'14px 16px',borderBottom:'1px solid var(--bd)',display:'flex',alignItems:'center',gap:10}}><span className="gtext" style={{fontWeight:800,fontSize:18}}>GridPlan</span><button className="btn-ico" style={{marginLeft:'auto'}} onClick={()=>setDark(d=>!d)}>{dark?Ico.sun:Ico.moon}</button></div><ProjectsPanel {...{projects,saveProject,loadProject,deleteProject}}/></div>}
+        <div className="main-area">
+          <Controls rows={rows} setRows={setRows} showPos={showPos} setShowPos={setShowPos}/>
+          <GridView {...gridProps}/>
+        </div>
+        <MobNav tab={mobTab} setTab={setMobTab}/>
+        {toast&&<div className="toast">{toast}</div>}
+      </div>
+    );
+  }
+
+  return(
+    <div className="app-layout">
+      <div className="sidebar">
+        <Sidebar tab={sideTab} setTab={setSideTab} {...sideProps}/>
+      </div>
+      <div className="main-area">
+        <Controls rows={rows} setRows={setRows} showPos={showPos} setShowPos={setShowPos}/>
+        <GridView {...gridProps}/>
+      </div>
+      {toast&&<div className="toast">{toast}</div>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
