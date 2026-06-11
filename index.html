@@ -308,6 +308,25 @@ select{-webkit-appearance:none;appearance:none}
 
 hr{border:none;border-top:1px solid var(--bd);margin:14px 0}
 
+/* Video badge */
+.vid-badge{position:absolute;bottom:4px;left:4px;display:flex;align-items:center;gap:3px;background:rgba(0,0,0,.72);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;z-index:5;pointer-events:none}
+.vid-badge svg{width:12px;height:12px}
+.gimg .vid-badge{bottom:2px;left:2px;font-size:8px;padding:1px 4px;border-radius:3px}
+.gimg .vid-badge svg{width:10px;height:10px}
+/* Media info on hover */
+.media-info{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.75));color:#fff;font-size:10px;padding:14px 6px 4px;opacity:0;transition:opacity .18s;pointer-events:none;z-index:5}
+.cell:hover .media-info{opacity:1}
+/* Storage bar */
+.storage-bar{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin:6px 0}
+.storage-fill{height:100%;background:var(--gradient);border-radius:3px;transition:width .3s}
+/* Loading screen */
+.load-screen{position:fixed;inset:0;background:var(--bg0);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px}
+/* Video in post viewer */
+.feed-img-slide video{width:100%;height:100%;object-fit:contain;display:block;background:#000}
+/* Confirm dialog */
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px}
+.confirm-box{background:var(--bg1);border:1px solid var(--bd);border-radius:16px;padding:24px;width:100%;max-width:320px;text-align:center}
+
 @media(min-width:768px){
   .mob-header{display:none!important}
   .drawer{display:none!important}
@@ -326,6 +345,49 @@ function useLs(key,def){
   const[v,sv]=useState(()=>{try{const s=localStorage.getItem(key);return s?JSON.parse(s):def}catch{return def}});
   const set=useCallback(u=>sv(p=>{const n=typeof u==='function'?u(p):u;try{localStorage.setItem(key,JSON.stringify(n))}catch{}return n}),[key]);
   return[v,set];
+}
+
+/* ── IndexedDB helpers ── */
+const DB_NAME='gridplan-db',DB_VER=1,DBSTORE='media';
+function openDB(){
+  return new Promise((res,rej)=>{
+    const r=indexedDB.open(DB_NAME,DB_VER);
+    r.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains(DBSTORE))db.createObjectStore(DBSTORE,{keyPath:'id'})};
+    r.onsuccess=()=>res(r.result);
+    r.onerror=()=>rej(r.error);
+  });
+}
+async function dbPut(item){const db=await openDB();return new Promise((res,rej)=>{const tx=db.transaction(DBSTORE,'readwrite');tx.objectStore(DBSTORE).put(item);tx.oncomplete=res;tx.onerror=()=>rej(tx.error)})}
+async function dbGet(id){const db=await openDB();return new Promise((res,rej)=>{const tx=db.transaction(DBSTORE,'readonly');const r=tx.objectStore(DBSTORE).get(id);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+async function dbGetAll(){const db=await openDB();return new Promise((res,rej)=>{const tx=db.transaction(DBSTORE,'readonly');const r=tx.objectStore(DBSTORE).getAll();r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+async function dbDel(id){const db=await openDB();return new Promise((res,rej)=>{const tx=db.transaction(DBSTORE,'readwrite');tx.objectStore(DBSTORE).delete(id);tx.oncomplete=res;tx.onerror=()=>rej(tx.error)})}
+async function dbClear(){const db=await openDB();return new Promise((res,rej)=>{const tx=db.transaction(DBSTORE,'readwrite');tx.objectStore(DBSTORE).clear();tx.oncomplete=res;tx.onerror=()=>rej(tx.error)})}
+
+function genVideoThumb(file){
+  return new Promise(res=>{
+    const v=document.createElement('video');
+    v.preload='metadata';v.muted=true;v.playsInline=true;
+    const u=URL.createObjectURL(file);v.src=u;
+    let done=false;
+    v.onloadeddata=()=>{v.currentTime=Math.min(1,(v.duration||2)/2)};
+    v.onseeked=()=>{
+      if(done)return;done=true;
+      const c=document.createElement('canvas');
+      c.width=v.videoWidth||320;c.height=v.videoHeight||320;
+      c.getContext('2d').drawImage(v,0,0,c.width,c.height);
+      URL.revokeObjectURL(u);res(c.toDataURL('image/jpeg',0.7));
+    };
+    v.onerror=()=>{if(!done){done=true;URL.revokeObjectURL(u);res(null)}};
+    setTimeout(()=>{if(!done){done=true;URL.revokeObjectURL(u);res(null)}},8000);
+  });
+}
+
+function fmtSize(b){
+  if(!b)return '0B';
+  if(b<1024)return b+'B';
+  if(b<1048576)return(b/1024).toFixed(1)+'KB';
+  if(b<1073741824)return(b/1048576).toFixed(1)+'MB';
+  return(b/1073741824).toFixed(1)+'GB';
 }
 
 /* ── Icons ── */
@@ -355,6 +417,11 @@ const Ico={
   plus:<svg width="18"height="18"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"><line x1="12"y1="5"x2="12"y2="19"/><line x1="5"y1="12"x2="19"y2="12"/></svg>,
   drag:<svg width="14"height="14"viewBox="0 0 24 24"fill="currentColor"><circle cx="9"cy="6"r="2"/><circle cx="15"cy="6"r="2"/><circle cx="9"cy="12"r="2"/><circle cx="15"cy="12"r="2"/><circle cx="9"cy="18"r="2"/><circle cx="15"cy="18"r="2"/></svg>,
   check:<svg width="16"height="16"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="3"strokeLinecap="round"strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+  video:<svg width="16"height="16"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1"y="5"width="15"height="14"rx="2"ry="2"/></svg>,
+  play:<svg width="20"height="20"viewBox="0 0 24 24"fill="currentColor"stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>,
+  download2:<svg width="16"height="16"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12"y1="15"x2="12"y2="3"/></svg>,
+  upload2:<svg width="16"height="16"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12"y1="3"x2="12"y2="15"/></svg>,
+  alertTri:<svg width="16"height="16"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12"y1="9"x2="12"y2="13"/><line x1="12"y1="17"x2="12.01"y2="17"/></svg>,
 };
 
 /* ─── Fake captions / likes for preview feel ─── */
@@ -386,7 +453,9 @@ function PostViewer({posts, startIdx, profile, onClose}){
     window.addEventListener('keydown',h);return()=>window.removeEventListener('keydown',h);
   },[posts.length]);
 
-  const handleImgTap=()=>{
+  const handleImgTap=(idx)=>{
+    // Only double-tap heart on images, not videos
+    if(posts[idx]&&posts[idx].isVideo) return;
     const now=Date.now();
     if(now-lastTap.current<320){
       setLiked(true);
@@ -509,11 +578,22 @@ function PostViewer({posts, startIdx, profile, onClose}){
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
-            onClick={handleImgTap}>
+            onClick={()=>handleImgTap(imgIdx)}>
             <div className="feed-img-track" style={{transform:`translateX(${-imgIdx*100}%)`}}>
               {posts.map((img,i)=>(
                 <div key={img.id||i} className="feed-img-slide">
-                  <img src={img.url} alt={`Slide ${i+1}`}/>
+                  {img.isVideo?(
+                    <video
+                      src={img.url}
+                      poster={img.thumbUrl||undefined}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      onClick={e=>e.stopPropagation()}
+                    />
+                  ):(
+                    <img src={img.url} alt={`Slide ${i+1}`}/>
+                  )}
                 </div>
               ))}
             </div>
@@ -690,12 +770,24 @@ function ProfileHeader({profile,setProfile,postCount}){
 function UploadPanel({images,setImages,gridImages,setGridImages,addPos,setAddPos}){
   const fref=useRef();
   const[over,setOver]=useState(false);
-  const load=useCallback(files=>{
-    Array.from(files).filter(f=>f.type.startsWith('image/')).forEach(file=>{
-      const r=new FileReader();
-      r.onload=ev=>setImages(prev=>[...prev,{id:uid(),url:ev.target.result,name:file.name,isNew:true}]);
-      r.readAsDataURL(file);
-    });
+  const[loading,setLoading]=useState(false);
+  const load=useCallback(async files=>{
+    const valid=Array.from(files).filter(f=>f.type.startsWith('image/')||f.type.startsWith('video/'));
+    if(!valid.length)return;
+    setLoading(true);
+    for(const file of valid){
+      const isVid=file.type.startsWith('video/');
+      const id=uid();
+      try{
+        const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)});
+        let thumbUrl=null;
+        if(isVid) thumbUrl=await genVideoThumb(file);
+        const item={id,url:dataUrl,thumbUrl,name:file.name,isNew:true,isVideo:isVid,size:file.size,mimeType:file.type};
+        setImages(prev=>[...prev,item]);
+        dbPut({id,dataUrl,thumbUrl,name:file.name,isVideo:isVid,size:file.size,mimeType:file.type}).catch(()=>{});
+      }catch(e){console.warn('Upload err',e)}
+    }
+    setLoading(false);
   },[setImages]);
   const addToGrid=img=>{
     if(gridImages.find(g=>g.id===img.id))return;
@@ -706,7 +798,7 @@ function UploadPanel({images,setImages,gridImages,setGridImages,addPos,setAddPos
     if(!news.length)return;
     setGridImages(prev=>addPos==='start'?[...news,...prev]:[...prev,...news]);
   };
-  const remove=id=>{setImages(p=>p.filter(i=>i.id!==id));setGridImages(p=>p.filter(i=>i.id!==id))};
+  const remove=id=>{setImages(p=>p.filter(i=>i.id!==id));setGridImages(p=>p.filter(i=>i.id!==id));dbDel(id).catch(()=>{})};
   return(
     <div style={{padding:'12px 16px'}}>
       <div className={`upload-zone${over?' over':''}`}
@@ -714,10 +806,10 @@ function UploadPanel({images,setImages,gridImages,setGridImages,addPos,setAddPos
         onDragLeave={()=>setOver(false)}
         onDrop={e=>{e.preventDefault();setOver(false);load(e.dataTransfer.files)}}
         onClick={()=>fref.current.click()}>
-        <div style={{color:'var(--t3)',marginBottom:8,display:'flex',justifyContent:'center'}}>{Ico.upload}</div>
-        <div style={{fontSize:14,fontWeight:600,marginBottom:3}}>Drop images here</div>
-        <div style={{fontSize:12,color:'var(--t3)'}}>or tap to browse</div>
-        <input ref={fref} type="file" accept="image/*" multiple style={{display:'none'}} onChange={e=>load(e.target.files)}/>
+        <div style={{color:'var(--t3)',marginBottom:8,display:'flex',justifyContent:'center'}}>{loading?<span className="spin"/>:Ico.upload}</div>
+        <div style={{fontSize:14,fontWeight:600,marginBottom:3}}>{loading?'Processing…':'Drop images or videos here'}</div>
+        <div style={{fontSize:12,color:'var(--t3)'}}>JPG, PNG, MP4, MOV, WebM</div>
+        <input ref={fref} type="file" accept="image/*,video/mp4,video/webm,video/quicktime" multiple style={{display:'none'}} onChange={e=>load(e.target.files)}/>
       </div>
       {images.length>0&&(
         <div style={{marginTop:12}}>
@@ -733,7 +825,8 @@ function UploadPanel({images,setImages,gridImages,setGridImages,addPos,setAddPos
           <div className="gallery-grid">
             {images.map(img=>(
               <div key={img.id} className={`gimg${gridImages.find(g=>g.id===img.id)?' in':''}`} onClick={()=>addToGrid(img)}>
-                <img src={img.url} alt=""/>
+                <img src={img.isVideo?(img.thumbUrl||img.url):img.url} alt=""/>
+                {img.isVideo&&<div className="vid-badge">{Ico.video}</div>}
                 {gridImages.find(g=>g.id===img.id)&&(
                   <div style={{position:'absolute',inset:0,background:'rgba(0,149,246,.25)',display:'flex',alignItems:'center',justifyContent:'center'}}>
                     <span style={{color:'#fff'}}>{Ico.check}</span>
@@ -842,13 +935,16 @@ function GridView({gridImages,setGridImages,gridRows,profile,setProfile,showPos,
               onDrop={()=>onDrop(i)}
               onDragEnd={onDragEnd}
             >
-              <img src={img.url} alt=""/>
+              <img src={img.isVideo?(img.thumbUrl||img.url):img.url} alt=""/>
+              {img.isVideo&&<div className="vid-badge">{Ico.video} VID</div>}
               {img.isNew&&<div className="tag-n">NEW</div>}
+              {/* Media info on hover */}
+              <div className="media-info">{img.name||'Untitled'}{img.size?' · '+fmtSize(img.size):''}{img.isVideo?' · Video':''}</div>
               {/* Drag handle */}
               <div className="cell-drag-handle" style={{cursor:'grab'}}>{Ico.drag}</div>
               {/* Tap to view */}
               <div className="cell-tap" onClick={()=>setViewer(i)}/>
-              {/* Remove on long-press area (overlay button) */}
+              {/* Remove */}
               <button onClick={e=>{e.stopPropagation();remove(img.id)}} style={{position:'absolute',bottom:4,right:4,width:22,height:22,borderRadius:50,background:'rgba(0,0,0,.65)',border:'none',color:'#fff',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',opacity:0,transition:'opacity .18s',zIndex:6}} className="cell-del-btn">✕</button>
             </div>
           ):(
