@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>GridPlan 4 — Instagram Feed Planner</title>
+<title>GridPlan — Instagram Feed Planner</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -16,91 +16,238 @@
   --acc:#e1306c;--acc2:#c0215a;--blue:#0095f6;
   --gr:linear-gradient(135deg,#f58529,#dd2a7b,#8134af,#515bd4)
 }
-.lm{
-  --bg0:#fafafa;--bg1:#fff;--bg2:#f0f0f0;--bg3:#e8e8e8;
-  --bd:#dbdbdb;--bd2:#c8c8c8;--t1:#0a0a0a;--t2:#555;--t3:#aaa
-}
+.lm{--bg0:#fafafa;--bg1:#fff;--bg2:#f0f0f0;--bg3:#e8e8e8;--bd:#dbdbdb;--bd2:#c8c8c8;--t1:#0a0a0a;--t2:#555;--t3:#aaa}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg0);color:var(--t1);min-height:100vh;overflow-x:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg0);color:var(--t1);min-height:100vh;overflow-x:hidden;touch-action:pan-y}
 #root{min-height:100vh}
-::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
 button{cursor:pointer;font-family:inherit}
-input,textarea,select{font-family:inherit;background:var(--bg2);border:1px solid var(--bd);color:var(--t1);border-radius:8px;padding:9px 12px;font-size:14px;width:100%;outline:none;transition:border-color .2s}
+input,textarea,select{font-family:inherit;background:var(--bg2);border:1px solid var(--bd);color:var(--t1);border-radius:8px;padding:9px 12px;font-size:14px;width:100%;outline:none}
 input:focus,textarea:focus{border-color:var(--blue)}
-select{-webkit-appearance:none;appearance:none}
+select{-webkit-appearance:none}
 
-.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:8px;border:none;font-size:13px;font-weight:600;transition:all .15s;white-space:nowrap;line-height:1}
-.btn-p{background:var(--acc);color:#fff}.btn-p:hover{background:var(--acc2)}
-.btn-s{background:var(--bg2);color:var(--t1);border:1px solid var(--bd)}.btn-s:hover{background:var(--bg3)}
-.btn-ico{display:inline-flex;align-items:center;justify-content:center;padding:7px;border-radius:8px;background:var(--bg2);border:1px solid var(--bd);color:var(--t2);transition:all .15s}.btn-ico:hover{color:var(--t1);border-color:var(--bd2)}
-.chip{display:inline-flex;align-items:center;gap:4px;padding:5px 11px;border-radius:20px;font-size:12px;font-weight:600;background:var(--bg2);color:var(--t2);border:1px solid var(--bd);cursor:pointer;transition:all .15s;white-space:nowrap}.chip.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:8px;border:none;font-size:13px;font-weight:600;white-space:nowrap;line-height:1;transition:background .15s}
+.btn-p{background:var(--acc);color:#fff}.btn-p:active{background:var(--acc2)}
+.btn-s{background:var(--bg2);color:var(--t1);border:1px solid var(--bd)}.btn-s:active{background:var(--bg3)}
+.btn-ico{display:inline-flex;align-items:center;justify-content:center;padding:7px;border-radius:8px;background:var(--bg2);border:1px solid var(--bd);color:var(--t2)}.btn-ico:active{color:var(--t1)}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;background:var(--bg2);color:var(--t2);border:1px solid var(--bd);cursor:pointer;white-space:nowrap}.chip.on{background:var(--acc);color:#fff;border-color:var(--acc)}
 .tab-bar{display:flex;background:var(--bg2);border-radius:10px;padding:3px}
-.tab-btn{flex:1;padding:7px;border-radius:7px;border:none;background:transparent;color:var(--t2);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s}.tab-btn.on{background:var(--bg1);color:var(--t1)}
-.upload-zone{border:2px dashed var(--bd2);border-radius:14px;padding:28px 16px;text-align:center;cursor:pointer;transition:all .2s}.upload-zone:hover,.upload-zone.over{border-color:var(--acc);background:rgba(225,48,108,.06)}
+.tab-btn{flex:1;padding:7px;border-radius:7px;border:none;background:transparent;color:var(--t2);font-size:13px;font-weight:500;cursor:pointer}.tab-btn.on{background:var(--bg1);color:var(--t1)}
+.upload-zone{border:2px dashed var(--bd2);border-radius:14px;padding:28px 16px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s}.upload-zone.over{border-color:var(--acc);background:rgba(225,48,108,.06)}
 .gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
-.gimg{aspect-ratio:1;overflow:hidden;border-radius:7px;cursor:pointer;position:relative;border:2px solid transparent;transition:border-color .15s}.gimg.in{border-color:var(--blue)}.gimg img{width:100%;height:100%;object-fit:cover;display:block}.gimg .del{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.75);color:#fff;border:none;font-size:11px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s}.gimg:hover .del{opacity:1}
+.gimg{aspect-ratio:1;overflow:hidden;border-radius:7px;cursor:pointer;position:relative;border:2px solid transparent}.gimg.in{border-color:var(--blue)}.gimg img{width:100%;height:100%;object-fit:cover;display:block}
+.gimg .del{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.75);color:#fff;border:none;font-size:12px;display:flex;align-items:center;justify-content:center;z-index:2}
 .lbl{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--t3);margin-bottom:6px}
-.proj-item{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;border:1px solid var(--bd);cursor:pointer;transition:all .15s}.proj-item:hover{border-color:var(--bd2);background:var(--bg2)}
+.proj-item{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;border:1px solid var(--bd);cursor:pointer}.proj-item:active{background:var(--bg2)}
 .proj-thumb{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;width:48px;height:48px;border-radius:5px;overflow:hidden;flex-shrink:0;background:var(--bg3)}.proj-thumb div{overflow:hidden;background:var(--bg3)}.proj-thumb img{width:100%;height:100%;object-fit:cover}
-.spin{width:16px;height:16px;border:2.5px solid var(--bd2);border-top-color:var(--acc);border-radius:50%;animation:sp .7s linear infinite;display:inline-block}
+.spin{width:16px;height:16px;border:2.5px solid var(--bd2);border-top-color:var(--acc);border-radius:50%;animation:sp .7s linear infinite;display:inline-block;flex-shrink:0}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--bd2);padding:10px 20px;border-radius:24px;font-size:13px;font-weight:500;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.5);pointer-events:none;white-space:nowrap;animation:su .22s ease}
 .gtext{background:var(--gr);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.stats-row{display:flex;gap:20px}.stats-row .stat span{font-size:14px;font-weight:700;display:block;color:var(--t1)}.stats-row .stat p{font-size:12px;color:var(--t2)}
+.stats-row{display:flex;gap:20px}.stats-row .stat span{font-size:14px;font-weight:700;display:block}.stats-row .stat p{font-size:12px;color:var(--t2)}
 
-/* ═══════════════════════════════════════════════
-   INSTAGRAM GRID — drag + zoom/pan architecture
-   ═══════════════════════════════════════════════
-   KEY RULES:
-   1. The .cell itself is draggable (no overlay on top blocking it)
-   2. Edit mode (zoom/pan) disables draggable so touch/mouse go to image
-   3. NO .cell-tap overlay. Clicking is handled by onPointerUp instead.
+/* ── IG GRID ──
+   Mobile touch drag architecture:
+   - Long-press (400ms) activates drag mode globally
+   - Touch move updates a floating ghost + tracks position
+   - Touch end drops onto the nearest cell
+   - NO html5 drag API (broken on mobile)
+   - Tap (< 200ms, no move) = enter zoom/pan edit mode
 */
 .ig-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--bg0)}
+.cell{aspect-ratio:1;overflow:hidden;position:relative;background:var(--bg2);touch-action:none;user-select:none;-webkit-user-select:none}
 
-.cell{
-  aspect-ratio:1;overflow:hidden;position:relative;
-  background:var(--bg2);
-  /* Default: grab cursor for drag */
-  cursor:grab;
-  user-select:none;-webkit-user-select:none;
-}
-.cell:active{cursor:grabbing}
+/* image inside cell — transform controlled by JS */
+.cell-img{position:absolute;inset:0;overflow:hidden}
+.cell-img img,.cell-img video{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;user-select:none;transform-origin:center center;will-change:transform}
 
-/* Image wrapper — clips the zoomed/panned image */
-.cell-img{
-  position:absolute;inset:0;overflow:hidden;
-  pointer-events:none; /* never intercept events in normal mode */
-}
-.cell-img img,.cell-img video{
-  width:100%;height:100%;
-  object-fit:cover;display:block;
-  pointer-events:none;
-  user-select:none;-webkit-user-select:none;
-  /* transform-origin is set dynamically via inline style */
-  will-change:transform;
+/* edit mode ring */
+.cell.edit{outline:3px solid var(--blue);outline-offset:-3px}
+/* drag-source dim */
+.cell.drag-src{opacity:.3}
+/* drag-over highlight */
+.cell.drag-tgt{outline:3px solid var(--acc);outline-offset:-3px}
+
+/* floating drag ghost */
+.drag-ghost{
+  position:fixed;z-index:9000;pointer-events:none;
+  width:100px;height:100px;border-radius:8px;overflow:hidden;
+  box-shadow:0 8px 32px rgba(0,0,0,.6);
+  border:2px solid var(--acc);
+  transform:translate(-50%,-50%) scale(1.08);
+  opacity:.92;
   transition:none;
 }
+.drag-ghost img,.drag-ghost video{width:100%;height:100%;object-fit:cover;display:block}
 
-/* Edit mode: blue ring, cursor changes, image layer gets pointer events */
-.cell.edit-mode{
-  cursor:default;
-  outline:3px solid var(--blue);
-  outline-offset:-3px;
-}
-.cell.edit-mode .cell-img{
-  pointer-events:auto;
-  cursor:move;
-}
-
-/* Drag states */
-.cell.dragging{opacity:.28}
-.cell.drag-over{outline:3px solid var(--acc);outline-offset:-3px}
-/* Don't show drag-over ring when in edit mode */
-.cell.edit-mode.drag-over{outline-color:var(--blue)}
-
-/* Hover bar — fades in on hover, always visible in edit mode */
+/* cell bottom bar */
 .cell-bar{
   position:absolute;bottom:0;left:0;right:0;
+  padding:22px 5px 5px;
+  background:linear-gradient(transparent,rgba(0,0,0,.75));
+  display:flex;align-items:flex-end;justify-content:space-between;
+  opacity:0;transition:opacity .15s;pointer-events:none;z-index:10;
+}
+.cell:hover .cell-bar,.cell.edit .cell-bar{opacity:1;pointer-events:auto}
+
+/* long-press ripple */
+.cell-ripple{
+  position:absolute;inset:0;
+  background:rgba(225,48,108,.18);
+  opacity:0;pointer-events:none;z-index:8;
+  transition:opacity .15s;
+}
+.cell.pressing .cell-ripple{opacity:1}
+
+/* zoom pill */
+.zoom-ctl{position:absolute;top:5px;left:5px;z-index:11;display:flex;align-items:center;gap:2px;background:rgba(0,0,0,.8);border-radius:20px;padding:3px 7px;pointer-events:auto}
+.zoom-ctl button{background:none;border:none;color:#fff;font-size:20px;line-height:1;padding:0 3px;cursor:pointer}
+.zoom-ctl span{color:#fff;font-size:11px;font-weight:700;min-width:34px;text-align:center}
+
+.tag-n{position:absolute;top:4px;right:4px;background:var(--acc);color:#fff;font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;z-index:12;pointer-events:none}
+.vid-badge{position:absolute;top:4px;left:4px;background:rgba(0,0,0,.7);color:#fff;font-size:9px;padding:2px 5px;border-radius:4px;z-index:12;pointer-events:none}
+.pos-badge{position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.7);color:#fff;font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;z-index:12;pointer-events:none}
+.empty-cell{aspect-ratio:1;background:var(--bg2);display:flex;align-items:center;justify-content:center;color:var(--t3)}
+.cell-btn{background:rgba(0,0,0,.65);border:none;border-radius:5px;color:#fff;font-size:11px;font-weight:600;padding:4px 9px;cursor:pointer;pointer-events:auto}
+.cell-btn.blue{background:rgba(0,110,200,.85)}
+.cell-btn.red{background:rgba(190,30,30,.8)}
+
+/* Profile */
+.profile-header{padding:14px 16px;border-bottom:1px solid var(--bd)}
+.avatar-ring{width:68px;height:68px;border-radius:50%;background:var(--gr);padding:2px;cursor:pointer;flex-shrink:0}
+
+/* Feed viewer */
+.feed-back{position:fixed;inset:0;z-index:500;background:var(--bg0);display:flex;flex-direction:column;overflow:hidden}
+.feed-topbar{display:flex;align-items:center;padding:8px 4px 8px 2px;border-bottom:1px solid var(--bd);flex-shrink:0;background:var(--bg0)}
+.feed-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.feed-img-wrap{position:relative;width:100%;aspect-ratio:1;overflow:hidden;background:#111;max-width:480px;margin:0 auto}
+.feed-track{display:flex;height:100%;will-change:transform}
+.feed-slide{flex:0 0 100%;height:100%;overflow:hidden}
+.feed-slide img{width:100%;height:100%;object-fit:cover;display:block}
+.feed-slide video{width:100%;height:100%;object-fit:contain;background:#000}
+.feed-arr{position:absolute;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.88);border:none;display:flex;align-items:center;justify-content:center;z-index:10;opacity:.9;color:#222}.feed-arr.l{left:8px}.feed-arr.r{right:8px}
+.feed-counter{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.6);color:#fff;font-size:12px;font-weight:600;padding:4px 10px;border-radius:14px;pointer-events:none}
+.feed-dots{display:flex;gap:5px;justify-content:center;padding:8px 0 2px}
+.feed-dot{width:6px;height:6px;border-radius:50%;background:var(--t3)}.feed-dot.on{background:var(--blue)}
+.feed-actions{display:flex;align-items:center;padding:6px 10px 2px}
+.feed-action{background:none;border:none;color:var(--t1);padding:7px 8px;display:flex;align-items:center}
+.feed-cmt-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid var(--bd);background:var(--bg0);flex-shrink:0}
+@keyframes hburst{0%{transform:scale(0) translate(-50%,-50%);opacity:1}60%{transform:scale(1.6) translate(-50%,-50%);opacity:1}100%{transform:scale(1.2) translate(-50%,-50%);opacity:0}}
+.heart-burst{position:absolute;top:50%;left:50%;pointer-events:none;z-index:20;animation:hburst .6s ease forwards}
+
+/* Layout */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:var(--bg1);border:1px solid var(--bd);border-radius:16px;padding:24px;width:100%;max-width:400px;max-height:90vh;overflow-y:auto}
+@media(min-width:768px){
+  .app-layout{display:flex;height:100vh;overflow:hidden}
+  .sidebar{width:320px;height:100vh;overflow-y:auto;border-right:1px solid var(--bd);flex-shrink:0;background:var(--bg1)}
+  .main-area{flex:1;height:100vh;overflow-y:auto}
+  .mob-header,.drawer,.drawer-bd{display:none!important}
+}
+@media(max-width:767px){
+  .app-layout{display:block;min-height:100vh}
+  .sidebar{display:none!important}
+}
+.mob-header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg1);border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:40}
+.drawer-bd{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s}.drawer-bd.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;left:0;bottom:0;width:82vw;max-width:300px;background:var(--bg1);border-right:1px solid var(--bd);z-index:160;transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden}.drawer.open{transform:translateX(0)}
+.drawer-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.drawer-nav{display:flex;flex-direction:column;gap:2px;padding:8px}
+.drawer-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;background:none;border:none;color:var(--t2);font-size:14px;font-weight:500;cursor:pointer;text-align:left;width:100%}.drawer-item.on{background:var(--bg2);color:var(--t1);font-weight:600}
+.drawer-content{flex:1;overflow-y:auto;border-top:1px solid var(--bd)}
+.drawer-footer{padding:12px 16px;border-top:1px solid var(--bd);display:flex;align-items:center;gap:10px;flex-shrink:0}
+hr{border:none;border-top:1px solid var(--bd);margin:14px 0}
+@keyframes su{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback,useMemo}=React;
+const uid=()=>Math.random().toString(36).slice(2,9);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+function useLs(key,def){
+  const[v,sv]=useState(()=>{try{const s=localStorage.getItem(key);return s?JSON.parse(s):def}catch{return def}});
+  const set=useCallback(u=>sv(p=>{const n=typeof u==='function'?u(p):u;try{localStorage.setItem(key,JSON.stringify(n))}catch{}return n}),[key]);
+  return[v,set];
+}
+
+function fmtSize(b){if(!b)return'';if(b<1048576)return(b/1024).toFixed(0)+'KB';return(b/1048576).toFixed(1)+'MB'}
+
+async function genVideoThumb(file){
+  return new Promise(res=>{
+    const v=document.createElement('video');v.muted=true;v.playsInline=true;
+    const u=URL.createObjectURL(file);v.src=u;let done=false;
+    v.onloadeddata=()=>{v.currentTime=0.5};
+    v.onseeked=()=>{if(done)return;done=true;const c=document.createElement('canvas');c.width=v.videoWidth||320;c.height=v.videoHeight||320;c.getContext('2d').drawImage(v,0,0,c.width,c.height);URL.revokeObjectURL(u);res(c.toDataURL('image/jpeg',.7))};
+    v.onerror=()=>{if(!done){done=true;URL.revokeObjectURL(u);res(null)}};
+    setTimeout(()=>{if(!done){done=true;URL.revokeObjectURL(u);res(null)}},8000);
+  });
+}
+
+/* ─── Icons ─── */
+const Ico={
+  upload:<svg width="20"height="20"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12"y1="3"x2="12"y2="15"/></svg>,
+  save:<svg width="20"height="20"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>,
+  dl:<svg width="17"height="17"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12"y1="15"x2="12"y2="3"/></svg>,
+  sun:<svg width="18"height="18"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"><circle cx="12"cy="12"r="5"/><line x1="12"y1="1"x2="12"y2="3"/><line x1="12"y1="21"x2="12"y2="23"/><line x1="4.22"y1="4.22"x2="5.64"y2="5.64"/><line x1="18.36"y1="18.36"x2="19.78"y2="19.78"/><line x1="1"y1="12"x2="3"y2="12"/><line x1="21"y1="12"x2="23"y2="12"/><line x1="4.22"y1="19.78"x2="5.64"y2="18.36"/><line x1="18.36"y1="5.64"x2="19.78"y2="4.22"/></svg>,
+  moon:<svg width="18"height="18"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>,
+  trash:<svg width="15"height="15"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>,
+  edit:<svg width="15"height="15"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+  close:<svg width="18"height="18"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"><line x1="18"y1="6"x2="6"y2="18"/><line x1="6"y1="6"x2="18"y2="18"/></svg>,
+  img:<svg width="20"height="20"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="1.5"strokeLinecap="round"strokeLinejoin="round"><rect x="3"y="3"width="18"height="18"rx="2"/><circle cx="8.5"cy="8.5"r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>,
+  person:<svg width="24"height="24"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12"cy="7"r="4"/></svg>,
+  undo:<svg width="15"height="15"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>,
+  redo:<svg width="15"height="15"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/></svg>,
+  eye:<svg width="13"height="13"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12"cy="12"r="3"/></svg>,
+  check:<svg width="16"height="16"viewBox="0 0 24 24"fill="none"stroke="#fff"strokeWidth="3"strokeLinecap="round"strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+  video:<svg width="12"height="12"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1"y="5"width="15"height="14"rx="2"ry="2"/></svg>,
+  more:<svg width="18"height="18"viewBox="0 0 24 24"fill="currentColor"><circle cx="5"cy="12"r="2"/><circle cx="12"cy="12"r="2"/><circle cx="19"cy="12"r="2"/></svg>,
+  chevL:<svg width="18"height="18"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2.5"strokeLinecap="round"strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>,
+  chevR:<svg width="18"height="18"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2.5"strokeLinecap="round"strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>,
+  move:<svg width="18"height="18"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="15 19 12 22 9 19"/><polyline points="19 9 22 12 19 15"/><line x1="2"y1="12"x2="22"y2="12"/><line x1="12"y1="2"x2="12"y2="22"/></svg>,
+};
+
+/* ─── DEFAULT TRANSFORM ─── */
+const DEF_TF={scale:1,tx:0,ty:0};
+
+/* ─── BAKE TRANSFORM → square canvas dataURL ───
+   Replicates exactly what the user sees in the cell:
+   object-fit:cover + translate(tx,ty) + scale(s)
+   Output is always a square JPEG at `size` pixels.
+*/
+function bakeTransform(imgUrl, tf, size=800){
+  return new Promise((resolve)=>{
+    const img=new Image();
+    img.crossOrigin='anonymous';
+    img.onload=()=>{
+      const c=document.createElement('canvas');
+      c.width=size; c.height=size;
+      const ctx=c.getContext('2d');
+      const s=tf.scale||1, tx=tf.tx||0, ty=tf.ty||0;
+      const iw=img.naturalWidth, ih=img.naturalHeight;
+      // cover-fit: scale image so it fills the square
+      const cover=Math.max(size/iw, size/ih);
+      const dw=iw*cover, dh=ih*cover;
+      // centre offset so image is centred before any pan
+      const cx=(size-dw)/2, cy=(size-dh)/2;
+      ctx.save();
+      // Apply same transform as CSS: translate to centre, scale, translate back, then pan
+      ctx.translate(size/2, size/2);
+      ctx.scale(s, s);
+      ctx.translate(-size/2, -size/2);
+      // Draw cover-fitted image, offset by pan (pan in screen px → divide by scale for draw space)
+      ctx.drawImage(img, cx + tx/s, cy + ty/s, dw, dh);
+      ctx.restore();
+      resolve(c.toDataURL('image/jpeg', 0.93));
+    };
+    img.onerror=()=>resolve(imgUrl);
+    img.src=imgUrl;
+  });
+}
+
+/* ════════════════════════════════════  position:absolute;bottom:0;left:0;right:0;
   padding:20px 5px 5px;
   background:linear-gradient(transparent,rgba(0,0,0,.7));
   display:flex;align-items:flex-end;justify-content:space-between;
